@@ -4,6 +4,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 TOKEN = os.environ["BOT_TOKEN"]
 PORT = int(os.environ.get("PORT", 8443))
 HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+WEBHOOK_PATH = f"/webhook/{TOKEN}"
 
 def start(update, context):
     update.message.reply_text('Ciao! Sono un bot su Render con webhook!')
@@ -23,15 +24,15 @@ def main():
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
 
     if HOST:
-        # NON mettere la porta nell'URL!!!
-        webhook_url = f"https://{HOST}/{TOKEN}"
+        webhook_url = f"https://{HOST}{WEBHOOK_PATH}"
+        # Stampa per debug
+        print(f"Webhook impostato su {webhook_url}")
         updater.start_webhook(
             listen="0.0.0.0",
             port=PORT,
-            url_path=TOKEN,
+            url_path=WEBHOOK_PATH.lstrip("/"),
         )
         updater.bot.set_webhook(webhook_url)
-        print(f"Webhook impostato su {webhook_url}")
     else:
         updater.start_polling()
         print("Bot partito in modalità polling (locale)")
