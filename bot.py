@@ -23,7 +23,7 @@ def main():
     dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
 
     if HOST:
-        # Siamo su Render, usa webhook
+        # Siamo su Render: usa webhook
         webhook_url = f"https://{HOST}/{TOKEN}"
         updater.start_webhook(
             listen="0.0.0.0",
@@ -31,7 +31,7 @@ def main():
             url_path=TOKEN,
         )
         updater.bot.set_webhook(webhook_url)
-        print(f"Webhook set su {webhook_url}")
+        print(f"Webhook impostato su {webhook_url}")
     else:
         # Siamo in locale: usa polling
         updater.start_polling()
