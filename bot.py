@@ -1,43 +1,39 @@
 import os
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = os.environ["BOT_TOKEN"]
-PORT = int(os.environ.get("PORT", 8443))
 HOST = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-WEBHOOK_PATH = f"/webhook/{TOKEN}"
+PORT = int(os.environ.get("PORT", 8443))
 
-def start(update, context):
-    update.message.reply_text('Ciao! Sono un bot su Render con webhook!')
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Ciao! Sono un bot su Render con webhook!')
 
-def help_command(update, context):
-    update.message.reply_text('Scrivi /start per iniziare o mandami un messaggio!')
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text('Scrivi /start per iniziare o mandami un messaggio!')
 
-def echo(update, context):
-    update.message.reply_text(update.message.text)
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(update.message.text)
 
 def main():
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
+    app = ApplicationBuilder().token(TOKEN).build()
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help_command))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), echo))
 
     if HOST:
-        webhook_url = f"https://{HOST}{WEBHOOK_PATH}"
-        # Stampa per debug
+        webhook_url = f"https://{HOST}/webhook/{TOKEN}"
         print(f"Webhook impostato su {webhook_url}")
-        updater.start_webhook(
+        app.run_webhook(
             listen="0.0.0.0",
             port=PORT,
-            url_path=WEBHOOK_PATH.lstrip("/"),
+            webhook_url=webhook_url,
+            allowed_updates=Update.ALL_TYPES,
         )
-        updater.bot.set_webhook(webhook_url)
     else:
-        updater.start_polling()
         print("Bot partito in modalità polling (locale)")
+        app.run_polling()
 
-    updater.idle()
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
